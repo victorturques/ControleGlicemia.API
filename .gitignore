@@ -1,0 +1,26 @@
+# Build
+bin/
+obj/
+out/
+publish/
+
+# IDEs
+.vs/
+.idea/
+.vscode/
+
+# User-specific
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Logs / testes
+*.log
+TestResults/
+
+# Secrets locais
+appsettings.Development.json
+secrets.json
+.env
+.env.*
