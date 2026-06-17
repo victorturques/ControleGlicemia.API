@@ -102,26 +102,31 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 });
 
 // -------------------- JWT --------------------
-var jwtKey =
-    Environment.GetEnvironmentVariable("Jwt__Key")
-    ?? builder.Configuration["Jwt:Key"];
+string? ReadEnv(params string[] keys)
+{
+    foreach (var key in keys)
+    {
+        var value = Environment.GetEnvironmentVariable(key);
+        if (!string.IsNullOrWhiteSpace(value))
+            return value;
+    }
+    return null;
+}
 
-    if (string.IsNullOrWhiteSpace(jwtKey))
-    throw new InvalidOperationException("Jwt__Key não configurada no Railway.");
-
+var jwtKey = (ReadEnv("Jwt__Key", "JWT__KEY") ?? builder.Configuration["Jwt:Key"])
+    ?.Trim()
+    .Trim('"');
 
 if (string.IsNullOrWhiteSpace(jwtKey))
     throw new InvalidOperationException("Jwt__Key não configurada no Railway.");
 
-var jwtIssuer =
-    Environment.GetEnvironmentVariable("Jwt__Issuer")
+var jwtIssuer = (ReadEnv("Jwt__Issuer", "JWT__ISSUER")
     ?? builder.Configuration["Jwt:Issuer"]
-    ?? "ControleGlicemiaAPI";
+    ?? "ControleGlicemiaAPI").Trim();
 
-var jwtAudience =
-    Environment.GetEnvironmentVariable("Jwt__Audience")
+var jwtAudience = (ReadEnv("Jwt__Audience", "JWT__AUDIENCE")
     ?? builder.Configuration["Jwt:Audience"]
-    ?? "ControleGlicemiaApp";
+    ?? "ControleGlicemiaApp").Trim();
 
 builder.Services
     .AddAuthentication(options =>
