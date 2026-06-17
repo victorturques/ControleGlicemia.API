@@ -1,4 +1,3 @@
-// Program.cs
 using System.Security.Claims;
 using System.Text;
 using AutoMapper;
@@ -19,11 +18,9 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddProblemDetails();
 
-// Swagger disponível em qualquer ambiente (útil para testar no Railway)
 builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo { Title = "ControleGlicemia.API", Version = "v1" });
-
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -33,7 +30,6 @@ builder.Services.AddSwaggerGen(options =>
         In = ParameterLocation.Header,
         Description = "Insira o token JWT no formato: Bearer {token}"
     });
-
     options.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
@@ -103,25 +99,20 @@ builder.Services
     {
         options.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
         options.SaveToken = false;
-
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
-
             ValidateAudience = true,
             ValidAudience = builder.Configuration["Jwt:Audience"],
-
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(
                     builder.Configuration["Jwt:Key"]
                     ?? throw new InvalidOperationException("Jwt:Key not configured"))),
-
             ValidateLifetime = true,
             RequireExpirationTime = true,
             ClockSkew = TimeSpan.Zero,
-
             NameClaimType = ClaimTypes.NameIdentifier
         };
     });
@@ -135,7 +126,6 @@ var app = builder.Build();
 
 app.UseForwardedHeaders();
 
-// Swagger habilitado em todos os ambientes para facilitar testes
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
@@ -143,9 +133,7 @@ app.UseSwaggerUI(c =>
     c.RoutePrefix = string.Empty;
 });
 
-// Removido UseHttpsRedirection pois o Railway gerencia HTTPS no proxy
-// e isso causaria redirect loop internamente
-app.UseCors("Frontend"); // ← corrigido de "FrontLocal" para "Frontend"
+app.UseCors("Frontend");
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
@@ -154,7 +142,6 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// Migrations automáticas no startup
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
