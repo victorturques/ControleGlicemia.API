@@ -102,7 +102,7 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 });
 
 // -------------------- JWT --------------------
-string? ReadEnv(params string[] keys)
+static string? ReadEnv(params string[] keys)
 {
     foreach (var key in keys)
     {
@@ -117,9 +117,6 @@ var jwtKey = (ReadEnv("Jwt__Key", "JWT__KEY") ?? builder.Configuration["Jwt:Key"
     ?.Trim()
     .Trim('"');
 
-if (string.IsNullOrWhiteSpace(jwtKey))
-    throw new InvalidOperationException("Jwt__Key não configurada no Railway.");
-
 var jwtIssuer = (ReadEnv("Jwt__Issuer", "JWT__ISSUER")
     ?? builder.Configuration["Jwt:Issuer"]
     ?? "ControleGlicemiaAPI").Trim();
@@ -127,6 +124,14 @@ var jwtIssuer = (ReadEnv("Jwt__Issuer", "JWT__ISSUER")
 var jwtAudience = (ReadEnv("Jwt__Audience", "JWT__AUDIENCE")
     ?? builder.Configuration["Jwt:Audience"]
     ?? "ControleGlicemiaApp").Trim();
+
+// debug temporário de startup (não imprime segredo)
+Console.WriteLine($"[JWT] Env Jwt__Key existe? {!string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("Jwt__Key"))}");
+Console.WriteLine($"[JWT] Env JWT__KEY existe? {!string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("JWT__KEY"))}");
+Console.WriteLine($"[JWT] jwtKey final vazia? {string.IsNullOrWhiteSpace(jwtKey)}");
+
+if (string.IsNullOrWhiteSpace(jwtKey))
+    throw new InvalidOperationException("Jwt__Key não configurada no Railway.");
 
 builder.Services
     .AddAuthentication(options =>
@@ -153,7 +158,6 @@ builder.Services
             ValidateLifetime = true,
             RequireExpirationTime = true,
             ClockSkew = TimeSpan.Zero,
-
             NameClaimType = ClaimTypes.NameIdentifier
         };
     });
