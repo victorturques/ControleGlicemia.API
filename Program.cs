@@ -106,6 +106,10 @@ var jwtKey =
     Environment.GetEnvironmentVariable("Jwt__Key")
     ?? builder.Configuration["Jwt:Key"];
 
+    if (string.IsNullOrWhiteSpace(jwtKey))
+    throw new InvalidOperationException("Jwt__Key não configurada no Railway.");
+
+
 if (string.IsNullOrWhiteSpace(jwtKey))
     throw new InvalidOperationException("Jwt__Key não configurada no Railway.");
 
@@ -177,10 +181,10 @@ app.UseAuthorization();
 app.MapControllers();
 
 // -------------------- Migrations --------------------
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.Migrate();
-}
+//using (var scope = app.Services.CreateScope())
+//{
+//    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+//    db.Database.Migrate();
+//}
 
 app.Run();
