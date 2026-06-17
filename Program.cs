@@ -1,3 +1,4 @@
+// Program.cs
 using System.Security.Claims;
 using System.Text;
 using AutoMapper;
@@ -14,12 +15,11 @@ using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Controllers + ProblemDetails
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddProblemDetails();
 
-// Swagger + JWT no Swagger
+// Swagger disponível em qualquer ambiente (útil para testar no Railway)
 builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo { Title = "ControleGlicemia.API", Version = "v1" });
@@ -50,24 +50,20 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-// AutoMapper
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
-// DB (MySQL)
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? throw new InvalidOperationException("ConnectionStrings:DefaultConnection não configurada.");
+var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL")
+                       ?? builder.Configuration.GetConnectionString("DefaultConnection");
 
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+    options.UseMySql(connectionString, ServerVersion.Parse("8.0.36-mysql")));
 
-// Repositories
 builder.Services.AddScoped<IRegistroGlicoseRepository, RegistroGlicoseRepository>();
 builder.Services.AddScoped<IMedicamentoRepository, MedicamentoRepository>();
 builder.Services.AddScoped<IRefeicaoRepository, RefeicaoRepository>();
 builder.Services.AddScoped<IRegistroDiarioRepository, RegistroDiarioRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 
-// Services
 builder.Services.AddScoped<IRegistroGlicoseService, RegistroGlicoseService>();
 builder.Services.AddScoped<IMedicamentoService, MedicamentoService>();
 builder.Services.AddScoped<IRefeicaoService, RefeicaoService>();
@@ -76,7 +72,6 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IRelatorioService, RelatorioService>();
 
-// CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("Frontend", policy =>
@@ -91,7 +86,6 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Forwarded Headers (Render/Proxy)
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
     options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
@@ -99,7 +93,6 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
     options.KnownProxies.Clear();
 });
 
-// JWT Auth
 builder.Services
     .AddAuthentication(options =>
     {
@@ -135,48 +128,37 @@ builder.Services
 
 builder.Services.AddAuthorization();
 
-// PORT dinâmica (Render)
-var port = Environment.GetEnvironmentVariable("PORT");
-if (!string.IsNullOrWhiteSpace(port))
-{
-    builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
-}
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 
 var app = builder.Build();
 
-// Aplica migrations automaticamente no startup (deploy)
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.Migrate();
-}
-
-// Proxy headers (antes de HTTPS redirection)
 app.UseForwardedHeaders();
 
-if (app.Environment.IsDevelopment())
+// Swagger habilitado em todos os ambientes para facilitar testes
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "ControleGlicemia.API V1");
-        c.RoutePrefix = string.Empty;
-    });
-}
-else
-{
-    app.UseHsts();
-}
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "ControleGlicemia.API V1");
+    c.RoutePrefix = string.Empty;
+});
 
-app.UseHttpsRedirection();
-app.UseCors("Frontend");
+// Removido UseHttpsRedirection pois o Railway gerencia HTTPS no proxy
+// e isso causaria redirect loop internamente
+app.UseCors("Frontend"); // ← corrigido de "FrontLocal" para "Frontend"
 
-// Middleware global de exceções
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Migrations automáticas no startup
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.Migrate();
+}
 
 app.Run();

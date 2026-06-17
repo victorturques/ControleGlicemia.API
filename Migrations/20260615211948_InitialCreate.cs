@@ -23,11 +23,13 @@ namespace ControleGlicemia.API.Migrations
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
                     Nome = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Email = table.Column<string>(type: "longtext", nullable: false)
+                    Email = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     SenhaHash = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    CriadoEm = table.Column<DateTime>(type: "datetime(6)", nullable: false)
+                    CriadoEm = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    GlicemiaMinima = table.Column<double>(type: "double", nullable: false),
+                    GlicemiaMaxima = table.Column<double>(type: "double", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -66,9 +68,13 @@ namespace ControleGlicemia.API.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
                     UserId = table.Column<int>(type: "int", nullable: false),
-                    Descricao = table.Column<string>(type: "longtext", nullable: false)
+                    Nome = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    RealizadaEm = table.Column<DateTime>(type: "datetime(6)", nullable: false)
+                    Descricao = table.Column<string>(type: "varchar(500)", maxLength: 500, nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    DataHora = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    Observacoes = table.Column<string>(type: "varchar(500)", maxLength: 500, nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4")
                 },
                 constraints: table =>
                 {
@@ -113,7 +119,10 @@ namespace ControleGlicemia.API.Migrations
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
                     UserId = table.Column<int>(type: "int", nullable: false),
                     Valor = table.Column<double>(type: "double", nullable: false),
-                    MedidoEm = table.Column<DateTime>(type: "datetime(6)", nullable: false)
+                    MedidoEm = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    MomentoMedicao = table.Column<int>(type: "int", nullable: false),
+                    Observacoes = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4")
                 },
                 constraints: table =>
                 {
@@ -128,24 +137,30 @@ namespace ControleGlicemia.API.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Medicamentos_UserId",
+                name: "IX_Medicamentos_UserId_TomadoEm",
                 table: "Medicamentos",
-                column: "UserId");
+                columns: new[] { "UserId", "TomadoEm" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Refeicoes_UserId",
+                name: "IX_Refeicoes_UserId_DataHora",
                 table: "Refeicoes",
-                column: "UserId");
+                columns: new[] { "UserId", "DataHora" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_RegistrosDiarios_UserId",
+                name: "IX_RegistrosDiarios_UserId_Data",
                 table: "RegistrosDiarios",
-                column: "UserId");
+                columns: new[] { "UserId", "Data" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_RegistrosGlicose_UserId",
+                name: "IX_RegistrosGlicose_UserId_MedidoEm",
                 table: "RegistrosGlicose",
-                column: "UserId");
+                columns: new[] { "UserId", "MedidoEm" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Users_Email",
+                table: "Users",
+                column: "Email",
+                unique: true);
         }
 
         /// <inheritdoc />

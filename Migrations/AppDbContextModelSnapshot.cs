@@ -135,10 +135,7 @@ namespace ControleGlicemia.API.Migrations
 
                     b.HasIndex("UserId", "MedidoEm");
 
-                    b.ToTable("RegistrosGlicose", t =>
-                        {
-                            t.HasCheckConstraint("CK_RegistrosGlicose_MomentoMedicao", "MomentoMedicao >= 1 AND MomentoMedicao <= 7");
-                        });
+                    b.ToTable("RegistrosGlicose");
                 });
 
             modelBuilder.Entity("ControleGlicemia.API.Models.User", b =>

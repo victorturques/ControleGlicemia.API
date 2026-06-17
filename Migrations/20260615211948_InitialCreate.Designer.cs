@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ControleGlicemia.API.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260607212954_AddIndexesAndUserEmailUnique")]
-    partial class AddIndexesAndUserEmailUnique
+    [Migration("20260615211948_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -138,10 +138,7 @@ namespace ControleGlicemia.API.Migrations
 
                     b.HasIndex("UserId", "MedidoEm");
 
-                    b.ToTable("RegistrosGlicose", t =>
-                        {
-                            t.HasCheckConstraint("CK_RegistrosGlicose_MomentoMedicao", "MomentoMedicao >= 1 AND MomentoMedicao <= 7");
-                        });
+                    b.ToTable("RegistrosGlicose");
                 });
 
             modelBuilder.Entity("ControleGlicemia.API.Models.User", b =>
