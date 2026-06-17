@@ -14,13 +14,16 @@ using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// -------------------- Services base --------------------
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddProblemDetails();
 
+// -------------------- Swagger --------------------
 builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo { Title = "ControleGlicemia.API", Version = "v1" });
+
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -30,6 +33,7 @@ builder.Services.AddSwaggerGen(options =>
         In = ParameterLocation.Header,
         Description = "Insira o token JWT no formato: Bearer {token}"
     });
+
     options.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
@@ -48,12 +52,18 @@ builder.Services.AddSwaggerGen(options =>
 
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
-var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL")
-                       ?? builder.Configuration.GetConnectionString("DefaultConnection");
+// -------------------- DB (Railway) --------------------
+var connectionString =
+    Environment.GetEnvironmentVariable("DATABASE_URL")
+    ?? builder.Configuration.GetConnectionString("DefaultConnection");
+
+if (string.IsNullOrWhiteSpace(connectionString) || connectionString.Contains("${DATABASE_URL}"))
+    throw new InvalidOperationException("Connection string inválida. Configure DATABASE_URL no Railway.");
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.Parse("8.0.36-mysql")));
 
+// -------------------- DI --------------------
 builder.Services.AddScoped<IRegistroGlicoseRepository, RegistroGlicoseRepository>();
 builder.Services.AddScoped<IMedicamentoRepository, MedicamentoRepository>();
 builder.Services.AddScoped<IRefeicaoRepository, RefeicaoRepository>();
@@ -68,6 +78,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IRelatorioService, RelatorioService>();
 
+// -------------------- CORS --------------------
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("Frontend", policy =>
@@ -82,12 +93,31 @@ builder.Services.AddCors(options =>
     });
 });
 
+// -------------------- Proxy headers (Railway) --------------------
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
     options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
     options.KnownNetworks.Clear();
     options.KnownProxies.Clear();
 });
+
+// -------------------- JWT --------------------
+var jwtKey =
+    Environment.GetEnvironmentVariable("Jwt__Key")
+    ?? builder.Configuration["Jwt:Key"];
+
+if (string.IsNullOrWhiteSpace(jwtKey))
+    throw new InvalidOperationException("Jwt__Key não configurada no Railway.");
+
+var jwtIssuer =
+    Environment.GetEnvironmentVariable("Jwt__Issuer")
+    ?? builder.Configuration["Jwt:Issuer"]
+    ?? "ControleGlicemiaAPI";
+
+var jwtAudience =
+    Environment.GetEnvironmentVariable("Jwt__Audience")
+    ?? builder.Configuration["Jwt:Audience"]
+    ?? "ControleGlicemiaApp";
 
 builder.Services
     .AddAuthentication(options =>
@@ -99,31 +129,35 @@ builder.Services
     {
         options.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
         options.SaveToken = false;
+
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidIssuer = jwtIssuer,
+
             ValidateAudience = true,
-            ValidAudience = builder.Configuration["Jwt:Audience"],
+            ValidAudience = jwtAudience,
+
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(
-                    builder.Configuration["Jwt:Key"]
-                    ?? throw new InvalidOperationException("Jwt:Key not configured"))),
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+
             ValidateLifetime = true,
             RequireExpirationTime = true,
             ClockSkew = TimeSpan.Zero,
+
             NameClaimType = ClaimTypes.NameIdentifier
         };
     });
 
 builder.Services.AddAuthorization();
 
+// -------------------- Host/Port (Railway) --------------------
 var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
 builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 
 var app = builder.Build();
 
+// -------------------- Pipeline --------------------
 app.UseForwardedHeaders();
 
 app.UseSwagger();
@@ -142,6 +176,7 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+// -------------------- Migrations --------------------
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
