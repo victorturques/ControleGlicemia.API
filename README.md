@@ -20,6 +20,14 @@ API REST para controle glicêmico com autenticação JWT, gerenciamento de regis
 
 ---
 
+## 🔗 API em produção
+
+Acesse a documentação (Swagger UI):
+
+**https://controleglicemiaapi-production.up.railway.app/index.html**
+
+---
+
 ## 📌 Visão geral
 
 O **ControleGlicemia.API** foi desenvolvido para ajudar no acompanhamento de saúde de pessoas com necessidade de monitoramento glicêmico, com foco em:
