@@ -24,7 +24,7 @@ API REST para controle glicêmico com autenticação JWT, gerenciamento de regis
 
 Acesse a documentação (Swagger UI):
 
-**https://controleglicemiaapi-production.up.railway.app/index.html**
+**http://controleglicemia.runasp.net/index.html**
 
 ---
 
