@@ -52,13 +52,11 @@ builder.Services.AddSwaggerGen(options =>
 
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
-// -------------------- DB (Railway) --------------------
-var connectionString =
-    Environment.GetEnvironmentVariable("DATABASE_URL")
-    ?? builder.Configuration.GetConnectionString("DefaultConnection");
 
-if (string.IsNullOrWhiteSpace(connectionString) || connectionString.Contains("${DATABASE_URL}"))
-    throw new InvalidOperationException("Connection string inválida. Configure DATABASE_URL no Railway.");
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+if (string.IsNullOrWhiteSpace(connectionString))
+    throw new InvalidOperationException("Connection string inválida. Configure ConnectionStrings:DefaultConnection.");
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.Parse("8.0.36-mysql")));
@@ -131,7 +129,7 @@ Console.WriteLine($"[JWT] Env JWT__KEY existe? {!string.IsNullOrWhiteSpace(Envir
 Console.WriteLine($"[JWT] jwtKey final vazia? {string.IsNullOrWhiteSpace(jwtKey)}");
 
 if (string.IsNullOrWhiteSpace(jwtKey))
-    throw new InvalidOperationException("Jwt__Key não configurada no Railway.");
+    throw new InvalidOperationException("Jwt__Key não configurada no ambiente.");
 
 builder.Services
     .AddAuthentication(options =>
@@ -164,9 +162,6 @@ builder.Services
 
 builder.Services.AddAuthorization();
 
-// -------------------- Host/Port (Railway) --------------------
-var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
-builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 
 var app = builder.Build();
 
@@ -190,10 +185,10 @@ app.UseAuthorization();
 app.MapControllers();
 
 // -------------------- Migrations --------------------
-//using (var scope = app.Services.CreateScope())
-//{
-//    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-//    db.Database.Migrate();
-//}
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.Migrate();
+}
 
 app.Run();
