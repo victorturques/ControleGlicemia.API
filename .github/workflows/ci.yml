@@ -1,0 +1,53 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore
+        run: dotnet restore ControleGlicemia.API/ControleGlicemia.API.sln
+
+      - name: Build
+        run: dotnet build ControleGlicemia.API/ControleGlicemia.API.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test ControleGlicemia.API.Tests --configuration Release --no-build --verbosity normal
+
+  cd:
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    needs: ci
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Publish
+        run: dotnet publish ControleGlicemia.API/ControleGlicemia.API.csproj --configuration Release --output publish
+
+      - name: Deploy via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: publish/
+          server-dir: /

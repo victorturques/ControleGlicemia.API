@@ -1,0 +1,43 @@
+# Build
+bin/
+obj/
+out/
+publish/
+
+# IDEs
+.vs/
+.idea/
+.vscode/
+
+# User-specific
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Logs / testes
+*.log
+TestResults/
+
+# Secrets locais
+appsettings.Development.json
+appsettings.Production.json
+secrets.json
+.env
+.env.*
+
+# Logs do Serilog
+logs/
+
+# Banco SQLite (desenvolvimento)
+*.db
+*.sqlite
+
+# Cobertura de testes
+coverage/
+
+# Resultados de testes
+*.trx
+
+# Pacotes NuGet locais
+packages/
