@@ -20,7 +20,7 @@ Projeto de testes da [ControleGlicemia.API](../ControleGlicemia.API).
 | Mappers | 1 |
 | Extensions | 1 |
 
-**Total: 22 arquivos de teste**
+**Total: 159 testes (em 22 arquivos de teste)**
 
 ## Como executar
 
