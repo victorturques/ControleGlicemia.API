@@ -59,10 +59,16 @@ public class RelatorioServiceTests
             new() { Id = 1, UserId = userId, Data = new DateTime(2026, 7, 15), Observacoes = "Bem" }
         };
 
+        var refeicoes = new List<Refeicao>
+        {
+            new() { Id = 1, UserId = userId, Nome = "Café da manhã", DataHora = new DateTime(2026, 7, 15, 7, 30, 0) }
+        };
+
         _repositoryMock.Setup(r => r.GetUserByIdAsync(userId)).ReturnsAsync(user);
         _repositoryMock.Setup(r => r.GetRegistrosGlicoseByPeriodAsync(userId, It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(registrosGlicose);
         _repositoryMock.Setup(r => r.GetMedicamentosByPeriodAsync(userId, It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(medicamentos);
         _repositoryMock.Setup(r => r.GetRegistrosDiariosByPeriodAsync(userId, It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(registrosDiarios);
+        _repositoryMock.Setup(r => r.GetRefeicoesByPeriodAsync(userId, It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(refeicoes);
 
         var result = await _service.GerarRelatorioPdfAsync(userId, request);
 
@@ -94,6 +100,7 @@ public class RelatorioServiceTests
         _repositoryMock.Setup(r => r.GetRegistrosGlicoseByPeriodAsync(userId, It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(new List<RegistroGlicose>());
         _repositoryMock.Setup(r => r.GetMedicamentosByPeriodAsync(userId, It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(new List<Medicamento>());
         _repositoryMock.Setup(r => r.GetRegistrosDiariosByPeriodAsync(userId, It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(new List<RegistroDiario>());
+        _repositoryMock.Setup(r => r.GetRefeicoesByPeriodAsync(userId, It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(new List<Refeicao>());
 
         var result = await _service.GerarRelatorioPdfAsync(userId, request);
 
