@@ -3,6 +3,8 @@ using System.Net;
 using System.Text.Json;
 using ControleGlicemia.API.Middlewares;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
+using Moq;
 using Xunit;
 
 namespace ControleGlicemia.API.Tests.Middlewares;
@@ -12,7 +14,8 @@ public class ExceptionHandlingMiddlewareTests
     private static ExceptionHandlingMiddleware CreateMiddleware(RequestDelegate? next = null)
     {
         next ??= _ => throw new Exception("Erro interno inesperado");
-        return new ExceptionHandlingMiddleware(next);
+        var loggerMock = new Mock<ILogger<ExceptionHandlingMiddleware>>();
+        return new ExceptionHandlingMiddleware(next, loggerMock.Object);
     }
 
     private static async Task<(int StatusCode, JsonDocument? Body)> ExecuteMiddleware(ExceptionHandlingMiddleware middleware)
