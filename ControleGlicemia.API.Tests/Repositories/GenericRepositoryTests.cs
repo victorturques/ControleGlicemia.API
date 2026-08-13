@@ -143,7 +143,6 @@ public class GenericRepositoryTests : IDisposable
     {
         var result = await _repository.GetPagedByUserIdAsync(1, 1, 200);
 
-        // pageSize clamped to 100
         Assert.Equal(100, result.PageSize);
     }
 

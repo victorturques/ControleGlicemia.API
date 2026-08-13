@@ -22,24 +22,26 @@ using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// -------------------- Serilog --------------------
+var logsPath = Path.Combine(builder.Environment.ContentRootPath, "logs");
+Directory.CreateDirectory(logsPath);
+
 Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
     .WriteTo.Console()
-    .WriteTo.File("logs/controle-glicemia-.log", rollingInterval: RollingInterval.Day)
+    .WriteTo.File(Path.Combine(logsPath, "controle-glicemia-.log"), rollingInterval: RollingInterval.Day)
     .CreateLogger();
 
 builder.Host.UseSerilog();
 
-// -------------------- Services base --------------------
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddProblemDetails();
 
-// -------------------- Swagger --------------------
 builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo { Title = "ControleGlicemia.API", Version = "v1" });
+
+    options.CustomSchemaIds(type => type.FullName?.Replace("+", "."));
 
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
@@ -90,7 +92,10 @@ else
         options.UseMySql(connectionString, ServerVersion.Parse("8.0.36-mysql")));
 }
 
-// -------------------- DI --------------------
+Log.Information("Ambiente: {Environment} | Provedor: {Provider}",
+    builder.Environment.EnvironmentName,
+    builder.Environment.IsDevelopment() ? "SQLite" : "MySQL");
+
 builder.Services.AddScoped<IRegistroGlicoseRepository, RegistroGlicoseRepository>();
 builder.Services.AddScoped<IMedicamentoRepository, MedicamentoRepository>();
 builder.Services.AddScoped<IRefeicaoRepository, RefeicaoRepository>();
@@ -109,11 +114,9 @@ builder.Services.AddScoped<IRelatorioService, RelatorioService>();
 
 builder.Services.AddHostedService<ExpurgoService>();
 
-// -------------------- Health Checks --------------------
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<AppDbContext>("database");
 
-// -------------------- CORS --------------------
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("Frontend", policy =>
@@ -128,7 +131,6 @@ builder.Services.AddCors(options =>
     });
 });
 
-// -------------------- Proxy headers (Railway) --------------------
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
     options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
@@ -136,7 +138,6 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
     options.KnownProxies.Clear();
 });
 
-// -------------------- JWT --------------------
 static string? ReadEnv(params string[] keys)
 {
     foreach (var key in keys)
@@ -200,7 +201,6 @@ builder.Services.AddAuthorization(options =>
         policy.RequireAuthenticatedUser());
 });
 
-// -------------------- Rate Limiting --------------------
 builder.Services.AddRateLimiter(options =>
 {
     options.AddFixedWindowLimiter("AuthPolicy", config =>
@@ -225,18 +225,14 @@ builder.Services.AddRateLimiter(options =>
 
 var app = builder.Build();
 
-// -------------------- Pipeline --------------------
 app.UseForwardedHeaders();
 
-if (app.Environment.IsDevelopment())
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "ControleGlicemia.API V1");
-        c.RoutePrefix = string.Empty;
-    });
-}
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "ControleGlicemia.API V1");
+    c.RoutePrefix = string.Empty;
+});
 
 app.UseCors("Frontend");
 
@@ -246,7 +242,6 @@ app.UseMiddleware<TokenBlacklistMiddleware>();
 
 app.UseRateLimiter();
 
-// -------------------- Health Checks --------------------
 app.MapHealthChecks("/health", new HealthCheckOptions
 {
     ResponseWriter = async (context, report) =>
@@ -271,11 +266,18 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// -------------------- Migrations --------------------
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.Migrate();
+    try
+    {
+        db.Database.Migrate();
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogCritical(ex, "Falha ao aplicar migrations. A API continuará iniciando, mas o banco pode estar indisponível.");
+    }
 }
+
 
 app.Run();

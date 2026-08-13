@@ -9,9 +9,6 @@ namespace ControleGlicemia.API.Tests.Validators;
 
 public class ValidatorTests
 {
-    // ===========================
-    // CreateRegistroGlicoseValidator
-    // ===========================
     [Fact]
     public void CreateRegistroGlicoseValidator_DeveSerValido_QuandoDadosCorretos()
     {
@@ -98,9 +95,7 @@ public class ValidatorTests
         Assert.Contains(result.Errors, e => e.PropertyName == "Observacoes");
     }
 
-    // ===========================
-    // RegisterDtoValidator
-    // ===========================
+
     [Fact]
     public void RegisterDtoValidator_DeveSerValido_QuandoDadosCorretos()
     {
@@ -208,9 +203,7 @@ public class ValidatorTests
         Assert.Contains(result.Errors, e => e.PropertyName == "ConfirmPassword");
     }
 
-    // ===========================
-    // LoginDtoValidator
-    // ===========================
+
     [Fact]
     public void LoginDtoValidator_DeveSerValido_QuandoDadosCorretos()
     {
@@ -258,9 +251,7 @@ public class ValidatorTests
         Assert.Contains(result.Errors, e => e.PropertyName == "Email");
     }
 
-    // ===========================
-    // CreateMedicamentoValidator
-    // ===========================
+
     [Fact]
     public void CreateMedicamentoValidator_DeveSerValido_QuandoDadosCorretos()
     {
@@ -328,9 +319,7 @@ public class ValidatorTests
         Assert.Contains(result.Errors, e => e.PropertyName == "TomadoEm");
     }
 
-    // ===========================
-    // UpdateUserProfileDtoValidator
-    // ===========================
+
     [Fact]
     public void UpdateUserProfileDtoValidator_DeveFalhar_QuandoGlicemiaMinimaMaiorQueMaxima()
     {
@@ -365,9 +354,7 @@ public class ValidatorTests
         Assert.True(result.IsValid);
     }
 
-    // ===========================
-    // CreateRefeicaoValidator
-    // ===========================
+
     [Fact]
     public void CreateRefeicaoValidator_DeveFalhar_QuandoNomeVazio()
     {

@@ -12,11 +12,6 @@ public class MappingProfile : Profile
 {
     public MappingProfile()
     {
-        // =========================
-        // User
-        // =========================
-        // REMOVIDO: CreateMap<User, User>();
-        // Esse mapa é perigoso/desnecessário.
         CreateMap<User, UserProfileDto>();
 
         CreateMap<UpdateUserProfileDto, User>()
@@ -33,9 +28,6 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.Refeicoes, opt => opt.Ignore())
             .ForMember(dest => dest.RegistrosDiarios, opt => opt.Ignore());
 
-        // =========================
-        // RegistroGlicose
-        // =========================
         CreateMap<CreateRegistroGlicoseDto, RegistroGlicose>()
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ForMember(dest => dest.UserId, opt => opt.Ignore())
@@ -54,9 +46,6 @@ public class MappingProfile : Profile
 
         CreateMap<RegistroGlicose, RegistroGlicoseDto>();
 
-        // =========================
-        // Refeicao
-        // =========================
         CreateMap<CreateRefeicaoDto, Refeicao>()
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ForMember(dest => dest.UserId, opt => opt.Ignore())
@@ -75,9 +64,6 @@ public class MappingProfile : Profile
 
         CreateMap<Refeicao, RefeicaoDto>();
 
-        // =========================
-        // Medicamento
-        // =========================
         CreateMap<CreateMedicamentoDto, Medicamento>()
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ForMember(dest => dest.UserId, opt => opt.Ignore())
@@ -96,9 +82,6 @@ public class MappingProfile : Profile
 
         CreateMap<Medicamento, MedicamentoDto>();
 
-        // =========================
-        // RegistroDiario
-        // =========================
         CreateMap<CreateRegistroDiarioDto, RegistroDiario>()
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ForMember(dest => dest.UserId, opt => opt.Ignore())

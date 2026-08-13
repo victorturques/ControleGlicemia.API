@@ -86,7 +86,6 @@ public class AppDbContext : DbContext
             .HasForeignKey(r => r.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // Email único
         modelBuilder.Entity<User>()
             .Property(u => u.Email)
             .HasMaxLength(255);
@@ -95,14 +94,12 @@ public class AppDbContext : DbContext
             .HasIndex(u => u.Email)
             .IsUnique();
 
-        // Soft delete query filters
         SoftDeleteQueryFilter.Apply<User>(modelBuilder);
         SoftDeleteQueryFilter.Apply<RegistroGlicose>(modelBuilder);
         SoftDeleteQueryFilter.Apply<Medicamento>(modelBuilder);
         SoftDeleteQueryFilter.Apply<Refeicao>(modelBuilder);
         SoftDeleteQueryFilter.Apply<RegistroDiario>(modelBuilder);
 
-        // Índices de consulta por usuário + data
         modelBuilder.Entity<RegistroGlicose>()
             .HasIndex(r => new { r.UserId, r.MedidoEm });
 
